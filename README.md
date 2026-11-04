@@ -14,7 +14,9 @@ YangQueue xử lý CSV, JSON và văn bản bằng worker nền, giữ trạng t
 trong SQLite. Mỗi trình duyệt có workspace riêng. Đây là dự án backend một
 node dành cho học tập và sử dụng cá nhân, phát triển cho **Nguyễn Hồng Giang**.
 
-Mã hiện nằm ở nhánh **yangqueue** của repo DTDD.
+Repository độc lập này được tách từ nhánh **yangqueue** của DTDD, giữ nguyên
+lịch sử commit và thông báo nguồn. [Hồ sơ chuyển repository](docs/repository-migration.md)
+ghi source commit, kiểm tra và giới hạn của đợt chuyển. Chưa có website công khai.
 
 ![Bảng tác vụ YangQueue](docs/screenshots/desktop.png)
 
@@ -23,7 +25,7 @@ Mã hiện nằm ở nhánh **yangqueue** của repo DTDD.
 Cần Node.js 24 trở lên.
 
 ```bash
-git clone --branch yangqueue --single-branch https://github.com/nguyenhonggiang2407/DTDD.git YangQueue
+git clone https://github.com/nguyenhonggiang2407/YangQueue.git
 cd YangQueue
 npm ci
 npm start

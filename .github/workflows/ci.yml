@@ -1,7 +1,7 @@
 name: YangQueue checks
 on:
   push:
-    branches: [main, yangqueue]
+    branches: [main]
     paths-ignore: ["docs/screenshots/**"]
   pull_request:
   workflow_dispatch:
@@ -42,7 +42,7 @@ jobs:
           path: docs/screenshots/
           if-no-files-found: ignore
       - name: Commit tested formatting and screenshots
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/yangqueue' || github.ref == 'refs/heads/main')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git restore .github/workflows/ci.yml
           git add lib public test server.mjs package.json README.md NOTICE.md .prettierrc.json compose.yaml docs/screenshots
