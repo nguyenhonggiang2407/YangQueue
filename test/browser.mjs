@@ -120,13 +120,11 @@ test('mobile supports UTF-8 upload, safe rendering, navigation and result previe
     'Mobile horizontal overflow',
   );
   await page.locator('#new-job').click();
-  await page
-    .locator('#file-input')
-    .setInputFiles({
-      name: 'notes.txt',
-      mimeType: 'text/plain',
-      buffer: Buffer.from('Đỏ xanh đỏ.\n<img src=x onerror=alert(1)>'),
-    });
+  await page.locator('#file-input').setInputFiles({
+    name: 'notes.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Đỏ xanh đỏ.\n<img src=x onerror=alert(1)>'),
+  });
   await expect(page.locator('#job-type')).toHaveValue('text-stats');
   await page.locator('#job-title').fill('<img src=x onerror=alert(1)>');
   await page.locator('#submit-job').click();
