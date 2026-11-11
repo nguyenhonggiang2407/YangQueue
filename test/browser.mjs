@@ -93,6 +93,37 @@ test('queued cancellation and deletion keep an accurate task count', async () =>
   assert.deepEqual(errors, []);
   await context.close();
 });
+test('a filter selected during a pending refresh is applied without polling', async () => {
+  const { context, page, errors } = await setup();
+  await page.locator('#load-demo').click();
+  await expect(page.locator('#job-count')).toHaveText('3');
+  // Prevent the periodic refresh from hiding a dropped manual filter update.
+  await page.evaluate(() => Object.defineProperty(document, 'hidden', { value: true }));
+
+  const blocked = Promise.withResolvers(),
+    release = Promise.withResolvers();
+  let holdFirst = true;
+  await page.route('**/api/queue?**', async (route) => {
+    if (!holdFirst) return route.continue();
+    holdFirst = false;
+    const response = await route.fetch();
+    blocked.resolve();
+    await release.promise;
+    await route.fulfill({ response });
+  });
+  try {
+    await page.locator('#refresh').click();
+    await blocked.promise;
+    await page.locator('#state-filter').selectOption('failed');
+    release.resolve();
+    await expect(page.locator('#job-count')).toHaveText('0');
+    await expect(page.getByText('Chưa có tác vụ phù hợp.', { exact: true })).toBeVisible();
+    assert.deepEqual(errors, []);
+  } finally {
+    release.resolve();
+    await context.close();
+  }
+});
 test('malformed data fails once; editing and resubmission creates successful new work', async () => {
   const { context, page, errors } = await setup();
   await page.locator('#new-job').click();

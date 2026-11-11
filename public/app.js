@@ -31,7 +31,8 @@ let state = {
   signature: '',
   maxInput: 262144,
 };
-let refreshing = false,
+let refreshing = null,
+  refreshPending = false,
   toastTimer,
   searchTimer,
   submitKey = '';
@@ -198,30 +199,51 @@ function renderRows() {
   }
 }
 async function refresh(force = false) {
-  if (refreshing) return;
-  refreshing = true;
-  try {
-    const params = new URLSearchParams({ q: $('#search').value, state: $('#state-filter').value });
-    const snapshot = await api('/api/queue?' + params);
-    state.jobs = snapshot.jobs;
-    state.stats = snapshot.stats;
-    state.paused = snapshot.paused;
-    queueBanner();
-    renderRows();
-    $('#sync-status').textContent = 'Cập nhật ' + time(snapshot.serverTime);
-    $('#sync-status').classList.remove('offline');
-    if (state.selected && $('#job-dialog').open) {
-      const latest = state.jobs.find((j) => j.id === state.selected);
-      if (
-        force ||
-        !state.detail ||
-        latest?.version !== state.detail.version ||
-        active.includes(state.detail.status)
-      )
-        await loadDetail(state.selected);
+  if (refreshing) {
+    if (!force) return;
+    refreshPending = true;
+    return refreshing;
+  }
+  refreshing = (async () => {
+    let reloadDetail = force;
+    do {
+      refreshPending = false;
+      try {
+        await refreshSnapshot(reloadDetail);
+      } catch (err) {
+        if (!refreshPending) throw err;
+      }
+      reloadDetail = true;
+    } while (refreshPending);
+  })().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+function queueQuery() {
+  return new URLSearchParams({ q: $('#search').value, state: $('#state-filter').value }).toString();
+}
+async function refreshSnapshot(reloadDetail) {
+  const query = queueQuery();
+  const snapshot = await api('/api/queue?' + query);
+  if (query !== queueQuery()) return;
+  state.jobs = snapshot.jobs;
+  state.stats = snapshot.stats;
+  state.paused = snapshot.paused;
+  queueBanner();
+  renderRows();
+  $('#sync-status').textContent = 'Cập nhật ' + time(snapshot.serverTime);
+  $('#sync-status').classList.remove('offline');
+  if (state.selected && $('#job-dialog').open) {
+    const latest = state.jobs.find((j) => j.id === state.selected);
+    if (
+      reloadDetail ||
+      !state.detail ||
+      latest?.version !== state.detail.version ||
+      active.includes(state.detail.status)
+    ) {
+      await loadDetail(state.selected);
     }
-  } finally {
-    refreshing = false;
   }
 }
 async function loadDetail(id) {
@@ -370,7 +392,7 @@ function renderDetail(data) {
             { version: job.version },
             crypto.randomUUID(),
           );
-          await refresh();
+          await refresh(true);
           await openJob(result.job.id);
           toast('Đã tạo một lượt chạy mới, giữ nguyên lịch sử lượt trước.');
         }),
@@ -528,7 +550,7 @@ form.addEventListener('submit', async (event) => {
     };
     const result = await api('/api/jobs', 'POST', payload, submitKey);
     $('#create-dialog').close();
-    await refresh();
+    await refresh(true);
     await openJob(result.job.id);
     toast(result.replayed ? 'Đây là tác vụ đã được nhận trước đó.' : 'Đã đưa tác vụ vào hàng đợi.');
   });
