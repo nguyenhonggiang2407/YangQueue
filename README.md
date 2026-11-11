@@ -166,7 +166,9 @@ giới hạn streaming và UTF-8 lỗi.
 
 Browser tests dùng worker thật để xử lý dữ liệu, tải CSV và đối chiếu SHA-256,
 hủy/xóa, sửa dữ liệu sai thành lượt mới, upload UTF-8, render HTML thành text
-và kiểm tra layout 390 px. CI kiểm thử rồi lưu ảnh giao diện thật trong repo.
+và kiểm tra layout 390 px. Một ca kiểm thử giữ phản hồi làm mới trên mạng rồi đổi
+bộ lọc để xác nhận bảng hiển thị đúng bộ lọc ngay khi yêu cầu đang chờ kết thúc.
+CI kiểm thử rồi lưu ảnh giao diện thật trong repo.
 
 <details>
 <summary>Xem kết quả và giao diện mobile</summary>
